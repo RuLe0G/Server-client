@@ -30,12 +30,19 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
-            listener = new TcpListener(IPAddress.Parse("10.23.168.50"), port);
-            listener.Start();
-            ContentDa.Text += "сервер запущен\n";
-            Thread serverThread = new Thread(() => Count1());
-            serverThread.Start();
-
+            try
+            {
+                listener = new TcpListener(IPAddress.Parse("192.168.1.8"), port);
+                //10.23.168.50
+                listener.Start();
+                ContentDa.Text += "сервер запущен\n";
+                Thread serverThread = new Thread(() => Count1());
+                serverThread.Start();
+            }
+            catch (Exception ex)
+            {
+                ContentDa.Text = ex.Message;
+            }
         }
 
         public void Count1()
@@ -48,6 +55,7 @@ namespace Server
                     TcpClient client = listener.AcceptTcpClient();
 
                     Thread clientThread = new Thread(() => Process(client));
+                    Dispatcher.BeginInvoke(new Action(() =>ContentDa.Text += "\nNew connection"));
                     clientThread.Start();
 
                     //if (listener != null)
@@ -59,9 +67,9 @@ namespace Server
             }
             catch(Exception ex)
             {
-                ContentDa.Text += (ex.Message +  " Потеря соеденения\n");
+                MessageBox.Show(ex.Message +  " Потеря соеденения\n");
             }
-            }
+    }
 
 
 
@@ -69,10 +77,8 @@ namespace Server
         {
             TcpClient client = tcpClient;
             NetworkStream stream = null;
-            try
-            {
-                stream = client.GetStream();
-                byte[] data = new byte[64];
+            stream = client.GetStream();
+            byte[] data = new byte[64];
                 try
                 {
                     while (true)
@@ -88,30 +94,24 @@ namespace Server
 
                         string message = builder.ToString();
 
-                        if (message == "ddiissccoonnneecctteedd")
-                        {
-                            stream.Close();
-                            client.Close();
-                            //ContentDa.Text += (ex.Message + " Потеря соеденения\n");
-                            MessageBox.Show(" Потеря соеденения");
-                            break;
-                        }
-                        //}
-                        //string message1 = "";
-                        //for (int i = message.Length - 1; i >= 0; i--)
-                        //{
-                        //    message1 += message[i].ToString();
-                        //}
-                        //data = Encoding.Unicode.GetBytes(message1);
-                        //stream.Write(data, 0, data.Length);
-
+                    if (message == "ddiissccoonnneecctteedd")
+                    {
+                        stream.Close();
+                        client.Close();
+                        MessageBox.Show("end");
+                        break;
+                    }
+                        
+                       
                         data = Encoding.Unicode.GetBytes(message);
                         stream.Write(data, 0, data.Length);
+                    
+                        
                     }
                 }
-                catch (Exception ex)
+                catch 
                 {
-
+                
                 }
                 finally
                 {
@@ -121,11 +121,12 @@ namespace Server
                         client.Close();
                 }
             }
-            }
+           
+        
         public void Disconnected__Click(object sender, RoutedEventArgs e)
         {
             listener.Stop();
-            ContentDa.Text += "Потеря соеденения\n";
+            ContentDa.Text += "\nПотеря соеденения";
         }
     }
 }

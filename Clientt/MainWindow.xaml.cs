@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +23,7 @@ namespace Clientt
     public partial class MainWindow : Window
     {
         const int port = 8888;
-        const string address = "10.23.168.50";
+        const string address = "192.168.1.8";
 
         public MainWindow()
         {
@@ -34,8 +34,8 @@ namespace Clientt
         }
 
         //string userName;
-        bool st = false;
-        NetworkStream stream = null;
+        // st = false;
+        NetworkStream stream;
         TcpClient client = null;
 
         private void Connect_Click(object sender, RoutedEventArgs e)
@@ -45,7 +45,7 @@ namespace Clientt
 
             stream = client.GetStream();
 
-            Thread clientThread = new Thread(() => Count1());
+            Thread clientThread = new Thread(new ThreadStart(Count1));
             clientThread.Start();
 
 
@@ -53,38 +53,60 @@ namespace Clientt
 
         public void Count1()
         {
-
-            while (true)
+            try
             {
-                byte[] data = new byte[64];
-                StringBuilder builder = new StringBuilder();
-
-                int bytes = 0;
-                do
+                while (true)
                 {
+                    byte[] data = new byte[64];
+                    StringBuilder builder = new StringBuilder();
 
-                    bytes = stream.Read(data, 0, data.Length);
+                    int bytes = 0;
+                    do
+                    {
 
-                    builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+                        bytes = stream.Read(data, 0, data.Length);
+
+                        builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+                    }
+                    while (stream.DataAvailable);
+
+                    string message = builder.ToString();
+                    Dispatcher.BeginInvoke(new Action(() => Content.Text = ("Сервер: " + message)));
                 }
-                while (stream.DataAvailable);
-
-                string message = builder.ToString();
-                Content.Text = ("Сервер: " + message);
             }
 
+            catch
+            {
+               
+            }
         }
 
 
 
         private void Send_Click(object sender, RoutedEventArgs e)
         {
-            Content.Text += name.Text.ToString() + ": ";
-            string message = Inp.Text.ToString();
-            Content.Text += message;
+            try
+            {
+                Content.Text += "\n client: ";
+                string message = Inp.Text.ToString();
+                Content.Text += message;
 
-            byte[] data = Encoding.Unicode.GetBytes(name.Text.ToString() + ":"+message);
+                byte[] data = Encoding.Unicode.GetBytes(message);
+                stream.Write(data, 0, data.Length);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void Disconnect_Click(object sender, RoutedEventArgs e)
+        {
+            string message = "ddiissccoonnneecctteedd";
+            byte[] data = Encoding.Unicode.GetBytes(message);
             stream.Write(data, 0, data.Length);
+            stream.Close();
+            client.Close();
         }
     }
 }
