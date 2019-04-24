@@ -33,73 +33,58 @@ namespace Clientt
 
         }
 
-        string userName;
+        //string userName;
         bool st = false;
-        NetworkStream stream;
+        NetworkStream stream = null;
+        TcpClient client = null;
 
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
+ 
+            client = new TcpClient(address, port);
 
-            Thread myThread1 = new Thread(new ThreadStart(Count1));
-            myThread1.Start();
+            stream = client.GetStream();
+
+            Thread clientThread = new Thread(() => Count1());
+            clientThread.Start();
 
 
         }
 
         public void Count1()
         {
-            string userName = name.Text.ToString();
 
-            TcpClient client = null;
-            try
+            while (true)
             {
+                byte[] data = new byte[64];
+                StringBuilder builder = new StringBuilder();
 
-                client = new TcpClient(address, port);
-
-                NetworkStream stream = client.GetStream();
-
-                while (true)
+                int bytes = 0;
+                do
                 {
-                    st = true;
+
+                    bytes = stream.Read(data, 0, data.Length);
+
+                    builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
                 }
-            }
+                while (stream.DataAvailable);
 
-            catch (Exception)
-            {
-
-            }
-            finally
-            {
-                client.Close();
+                string message = builder.ToString();
+                Content.Text = ("Сервер: " + message);
             }
 
         }
 
-        public void Count2()
-        {
-            
-            Content.Text += userName + ": ";
-            string message = Inp.Text.ToString();
-            Content.Text += message;
-            byte[] data = Encoding.Unicode.GetBytes(message);
-            stream.Write(data, 0, data.Length);
-            data = new byte[64];
-            StringBuilder builder = new StringBuilder();
-            int bytes = 0;            do
-            {
-                
-                bytes = stream.Read(data, 0, data.Length);
-                
-                builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-            }
-            while (stream.DataAvailable);
-            message = builder.ToString();            Content.Text = ("Сервер: " + message);
-        }
+
 
         private void Send_Click(object sender, RoutedEventArgs e)
         {
-            Thread myThread2 = new Thread(new ThreadStart(Count2));
-            myThread2.Start();
+            Content.Text += name.Text.ToString() + ": ";
+            string message = Inp.Text.ToString();
+            Content.Text += message;
+
+            byte[] data = Encoding.Unicode.GetBytes(name.Text.ToString() + ":"+message);
+            stream.Write(data, 0, data.Length);
         }
     }
 }
