@@ -30,12 +30,15 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
+
             try
             {
-                listener = new TcpListener(IPAddress.Parse("192.168.1.8"), port);
                 //10.23.168.50
+                listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
                 listener.Start();
+
                 ContentDa.Text += "сервер запущен\n";
+
                 Thread serverThread = new Thread(() => Count1());
                 serverThread.Start();
             }
@@ -79,6 +82,7 @@ namespace Server
             NetworkStream stream = null;
             stream = client.GetStream();
             byte[] data = new byte[64];
+
                 try
                 {
                     while (true)
@@ -96,14 +100,20 @@ namespace Server
 
                     if (message == "ddiissccoonnneecctteedd")
                     {
-                        stream.Close();
-                        client.Close();
+                        //stream.Close();
+                        //client.Close();
                         MessageBox.Show("end");
                         break;
                     }
-                        
-                       
-                        data = Encoding.Unicode.GetBytes(message);
+
+                    string messag = "";
+                    for (int i = message.Length - 1; i >= 0; i--)                        
+                    {
+                        messag += message[i];
+                    }
+                    
+
+                        data = Encoding.Unicode.GetBytes(messag);
                         stream.Write(data, 0, data.Length);
                     
                         
@@ -111,7 +121,10 @@ namespace Server
                 }
                 catch 
                 {
-                
+                    if (stream != null)
+                        stream.Close();
+                    if (client != null)
+                        client.Close();
                 }
                 finally
                 {

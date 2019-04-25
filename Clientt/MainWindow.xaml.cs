@@ -23,7 +23,8 @@ namespace Clientt
     public partial class MainWindow : Window
     {
         const int port = 8888;
-        const string address = "192.168.1.8";
+        //10.23.168.50
+        const string address = "127.0.0.1";
 
         public MainWindow()
         {
@@ -77,7 +78,8 @@ namespace Clientt
 
             catch
             {
-               
+                stream.Close();
+                client.Close();
             }
         }
 
@@ -105,6 +107,7 @@ namespace Clientt
             string message = "ddiissccoonnneecctteedd";
             byte[] data = Encoding.Unicode.GetBytes(message);
             stream.Write(data, 0, data.Length);
+
             stream.Close();
             client.Close();
         }
